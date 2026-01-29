@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Thirsty Creator</title>
+  </head>
+  <body>
+    <!-- Splash / Audio -->
+    <div id="splash" style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;">
+      <img src="/images/freshfox-logo.png" alt="Logo" style="width:200px;margin-bottom:20px;">
+      <img src="/images/drinks.png" alt="Drinks" style="width:300px;margin-bottom:20px;">
+      <audio id="jingle" src="/audio/jinglemix.mp3" autoplay></audio>
+    </div>
+
+    <!-- React Root -->
+    <div id="root" style="display:none;"></div>
+
+    <script type="module" src="/src/main.jsx"></script>
+    <script>
+      // Show splash for 5s then hide
+      const splash = document.getElementById('splash');
+      const root = document.getElementById('root');
+      const audio = document.getElementById('jingle');
+
+      audio.addEventListener('ended', () => {
+        splash.style.display = 'none';
+        root.style.display = 'block';
+      });
+
+      // Fallback timeout 5s
+      setTimeout(() => {
+        splash.style.display = 'none';
+        root.style.display = 'block';
+      }, 5000);
+    </script>
+  </body>
+</html>
