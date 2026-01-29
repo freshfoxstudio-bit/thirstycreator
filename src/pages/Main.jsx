@@ -1,73 +1,51 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import axios from "axios";
 
-// Example list of drinks (name + alcohol flag)
 const DRINKS = [
-  { name: "Sunset Cooler", alcohol: true },
-  { name: "Tropical Punch", alcohol: false },
-  { name: "Minty Mojito", alcohol: true },
-  { name: "Berry Lemonade", alcohol: false },
-  { name: "Spicy Margarita", alcohol: true },
-  { name: "Cucumber Fizz", alcohol: false },
-  { name: "Electric Sunrise", alcohol: true },
-  { name: "Pineapple Delight", alcohol: false }
+  "Sunset Cooler",
+  "Tropical Punch",
+  "Minty Mojito",
+  "Berry Lemonade",
+  "Spicy Margarita",
+  "Cucumber Fizz",
+  "Electric Sunrise",
+  "Pineapple Delight"
 ];
 
 export default function Main({ user, legalAge, adminEmail }) {
   const navigate = useNavigate();
-  const [drinks, setDrinks] = useState([]);
+  const [availableDrinks, setAvailableDrinks] = useState([]);
 
   useEffect(() => {
-    // Filter drinks based on age
-    const available = DRINKS.filter(d => {
-      if (user.age >= legalAge) return true;
-      return !d.alcohol;
+    const filtered = DRINKS.filter(name => {
+      const alcoholic = ["Mojito", "Margarita", "Sunset Cooler", "Electric Sunrise"].some(a => name.includes(a));
+      return user.age >= legalAge || !alcoholic;
     });
-
-    // Shuffle drinks for randomness
-    setDrinks(available.sort(() => Math.random() - 0.5));
+    setAvailableDrinks(filtered.sort(() => Math.random() - 0.5));
   }, [user, legalAge]);
 
-  // Auto-generate recipe (simple algorithm)
-  const generateRecipe = drinkName => {
-    const ingredients = [
-      "Ice cubes",
-      "Lemon juice",
-      "Soda water",
-      "Mint leaves",
-      "Sugar syrup",
-      "Orange slice",
-      "Pineapple juice",
-      "Grenadine",
-      "Rum",
-      "Tequila"
-    ];
+  const handleClick = async (drinkName) => {
+    try {
+      const response = await axios.post("/api/generateRecipe", {
+        drinkName,
+        age: user.age
+      });
 
-    const steps = [
-      "Fill a glass with ice cubes",
-      "Add 2-3 ingredients",
-      "Stir gently",
-      "Garnish with a slice of fruit",
-      "Serve immediately"
-    ];
-
-    // Randomize 3-4 ingredients
-    const selectedIngredients = ingredients.sort(() => 0.5 - Math.random()).slice(0, 4);
-
-    return {
-      name: drinkName,
-      ingredients: selectedIngredients,
-      steps
-    };
+      const recipe = response.data;
+      navigate("/recipe", { state: { recipe } });
+    } catch (err) {
+      console.error(err);
+      alert("Failed to generate recipe. Try again.");
+    }
   };
 
   return (
     <div style={{ padding: "20px" }}>
       <h1>Welcome, {user.name}!</h1>
       {user.age < legalAge && <p>Only non-alcoholic drinks are shown.</p>}
-
       <div style={{ display: "flex", flexWrap: "wrap", gap: "15px", marginTop: "20px" }}>
-        {drinks.map((drink, i) => (
+        {availableDrinks.map((drink, i) => (
           <div
             key={i}
             style={{
@@ -83,9 +61,9 @@ export default function Main({ user, legalAge, adminEmail }) {
               backgroundColor: "#f9f9f9",
               boxShadow: "2px 2px 5px rgba(0,0,0,0.2)"
             }}
-            onClick={() => navigate("/recipe", { state: { recipe: generateRecipe(drink.name) } })}
+            onClick={() => handleClick(drink)}
           >
-            <span>{drink.name}</span>
+            {drink}
           </div>
         ))}
       </div>
