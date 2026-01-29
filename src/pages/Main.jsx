@@ -1,99 +1,93 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 
+// Example list of drinks (name + alcohol flag)
 const DRINKS = [
-  { name: "Mojito", ingredients: ["Mint", "Rum", "Sugar", "Lime"], alcohol: true },
-  { name: "Virgin Mojito", ingredients: ["Mint", "Sugar", "Lime"], alcohol: false },
-  { name: "Pina Colada", ingredients: ["Pineapple", "Coconut Cream", "Rum"], alcohol: true },
-  { name: "Fruit Punch", ingredients: ["Orange", "Pineapple", "Grenadine"], alcohol: false },
-  { name: "Martini", ingredients: ["Gin", "Vermouth"], alcohol: true },
-  { name: "Lemonade", ingredients: ["Lemon", "Sugar", "Water"], alcohol: false }
+  { name: "Sunset Cooler", alcohol: true },
+  { name: "Tropical Punch", alcohol: false },
+  { name: "Minty Mojito", alcohol: true },
+  { name: "Berry Lemonade", alcohol: false },
+  { name: "Spicy Margarita", alcohol: true },
+  { name: "Cucumber Fizz", alcohol: false },
+  { name: "Electric Sunrise", alcohol: true },
+  { name: "Pineapple Delight", alcohol: false }
 ];
 
-export default function Main() {
+export default function Main({ user, legalAge, adminEmail }) {
   const navigate = useNavigate();
-  const isOfLegalAge = sessionStorage.getItem("isOfLegalAge") === "true";
-  const isAdmin = sessionStorage.getItem("isAdmin") === "true";
+  const [drinks, setDrinks] = useState([]);
 
-  const [search, setSearch] = useState("");
-  const [ingredientInput, setIngredientInput] = useState("");
-  const [ingredients, setIngredients] = useState([]);
-  const [results, setResults] = useState([]);
-  const [randomDrinks, setRandomDrinks] = useState([]);
+  useEffect(() => {
+    // Filter drinks based on age
+    const available = DRINKS.filter(d => {
+      if (user.age >= legalAge) return true;
+      return !d.alcohol;
+    });
 
-  useEffect(() => generateRandomDrinks(), []);
-  useEffect(() => filterDrinks(), [search, ingredients]);
+    // Shuffle drinks for randomness
+    setDrinks(available.sort(() => Math.random() - 0.5));
+  }, [user, legalAge]);
 
-  const generateRandomDrinks = () => {
-    const available = DRINKS.filter(d => isOfLegalAge || !d.alcohol);
-    const shuffled = available.sort(() => 0.5 - Math.random());
-    setRandomDrinks(shuffled.slice(0, 3));
+  // Auto-generate recipe (simple algorithm)
+  const generateRecipe = drinkName => {
+    const ingredients = [
+      "Ice cubes",
+      "Lemon juice",
+      "Soda water",
+      "Mint leaves",
+      "Sugar syrup",
+      "Orange slice",
+      "Pineapple juice",
+      "Grenadine",
+      "Rum",
+      "Tequila"
+    ];
+
+    const steps = [
+      "Fill a glass with ice cubes",
+      "Add 2-3 ingredients",
+      "Stir gently",
+      "Garnish with a slice of fruit",
+      "Serve immediately"
+    ];
+
+    // Randomize 3-4 ingredients
+    const selectedIngredients = ingredients.sort(() => 0.5 - Math.random()).slice(0, 4);
+
+    return {
+      name: drinkName,
+      ingredients: selectedIngredients,
+      steps
+    };
   };
-
-  const filterDrinks = () => {
-    let filtered = DRINKS.filter(d => isOfLegalAge || !d.alcohol);
-    if (search.trim() !== "") filtered = filtered.filter(d => d.name.toLowerCase().includes(search.toLowerCase()));
-    if (ingredients.length > 0) filtered = filtered.filter(d =>
-      ingredients.every(i => d.ingredients.some(di => di.toLowerCase() === i.toLowerCase()))
-    );
-    setResults(filtered);
-  };
-
-  const addIngredient = () => {
-    const trimmed = ingredientInput.trim();
-    if (trimmed && !ingredients.includes(trimmed)) setIngredients([...ingredients, trimmed]);
-    setIngredientInput("");
-  };
-
-  const removeIngredient = (ing) => setIngredients(ingredients.filter(i => i !== ing));
-  const goToRecipe = (drink) => navigate("/recipe", { state: { drink } });
 
   return (
-    <div style={{ textAlign: "center", padding: "20px" }}>
-      <h1>Thirsty Creator</h1>
-      <p>{isOfLegalAge ? "Alcoholic + Non-Alcoholic Drinks" : "Non-Alcoholic Drinks Only"}</p>
+    <div style={{ padding: "20px" }}>
+      <h1>Welcome, {user.name}!</h1>
+      {user.age < legalAge && <p>Only non-alcoholic drinks are shown.</p>}
 
-      {isAdmin && (
-        <p><a href="/admin" style={{ color: "red", fontWeight: "bold" }}>Admin Panel</a></p>
-      )}
-
-      <div style={{ margin: "20px 0" }}>
-        <input type="text" placeholder="Search drinks by name" value={search} onChange={(e) => setSearch(e.target.value)} style={{ padding: "8px", width: "200px", borderRadius: "8px", border: "2px solid #ff99c2" }} />
-      </div>
-
-      <div style={{ margin: "20px 0" }}>
-        <input type="text" placeholder="Add ingredient" value={ingredientInput} onChange={(e) => setIngredientInput(e.target.value)} style={{ padding: "8px", width: "150px", borderRadius: "8px", border: "2px solid #ff99c2" }} />
-        <button onClick={addIngredient} style={{ marginLeft: "10px", padding: "8px 16px" }}>Add</button>
-      </div>
-
-      {ingredients.length > 0 && (
-        <div style={{ marginBottom: "20px" }}>
-          <strong>Ingredients:</strong>{" "}
-          {ingredients.map(i => (
-            <span key={i} style={{ margin: "0 5px", padding: "4px 8px", background: "#ffccff", borderRadius: "12px", cursor: "pointer" }} onClick={() => removeIngredient(i)}>
-              {i} ×
-            </span>
-          ))}
-        </div>
-      )}
-
-      <div style={{ marginBottom: "30px" }}>
-        <h3>Results</h3>
-        {results.length === 0 ? <p>No drinks found</p> : results.map(d => (
-          <div key={d.name} style={{ margin: "10px 0", cursor: "pointer", color: "#ff3366" }} onClick={() => goToRecipe(d)}>
-            {d.name} {d.alcohol && "(Alcohol)"}
+      <div style={{ display: "flex", flexWrap: "wrap", gap: "15px", marginTop: "20px" }}>
+        {drinks.map((drink, i) => (
+          <div
+            key={i}
+            style={{
+              width: "150px",
+              height: "150px",
+              border: "1px solid #ccc",
+              borderRadius: "10px",
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              textAlign: "center",
+              cursor: "pointer",
+              backgroundColor: "#f9f9f9",
+              boxShadow: "2px 2px 5px rgba(0,0,0,0.2)"
+            }}
+            onClick={() => navigate("/recipe", { state: { recipe: generateRecipe(drink.name) } })}
+          >
+            <span>{drink.name}</span>
           </div>
         ))}
-      </div>
-
-      <div>
-        <h3>Random Drinks</h3>
-        {randomDrinks.map(d => (
-          <div key={d.name} style={{ margin: "10px 0", cursor: "pointer", color: "#ff3366" }} onClick={() => goToRecipe(d)}>
-            {d.name} {d.alcohol && "(Alcohol)"}
-          </div>
-        ))}
-        <button onClick={generateRandomDrinks} style={{ marginTop: "10px", padding: "8px 16px" }}>Regenerate</button>
       </div>
     </div>
   );
