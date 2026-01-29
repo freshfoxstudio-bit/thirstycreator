@@ -7,34 +7,41 @@ import Admin from "./pages/Admin";
 const SPLASH_1_IMAGE = "/freshfox-logo.png";
 const SPLASH_2_IMAGE = "/drinks.png";
 const JINGLE_AUDIO = "/jinglemix.mp3";
-const LEGAL_AGE = 21; // Adjust to your region
+const LEGAL_AGE = 21;
 const ADMIN_EMAIL = "hcandlish2014@gmail.com";
 
 export default function App() {
   const [page, setPage] = useState("splash1");
   const [ageConfirmed, setAgeConfirmed] = useState(sessionStorage.getItem("ageConfirmed") === "true");
   const [isOfLegalAge, setIsOfLegalAge] = useState(sessionStorage.getItem("isOfLegalAge") === "true");
-  const [audioPlayed, setAudioPlayed] = useState(false);
   const [authEmail, setAuthEmail] = useState(sessionStorage.getItem("authEmail") || "");
 
   useEffect(() => {
-    if (!ageConfirmed && !audioPlayed) {
-      const audio = new Audio(JINGLE_AUDIO);
-      audio.play();
-      setAudioPlayed(true);
+    let splash2Timer, ageGateTimer;
+    const audio = new Audio(JINGLE_AUDIO);
 
+    const playAudio = async () => {
+      try { await audio.play(); } 
+      catch {}
+    };
+
+    if (!ageConfirmed) {
+      playAudio();
+
+      // Splash1 → Splash2
       const splash1Timer = setTimeout(() => setPage("splash2"), 5000);
-      audio.onended = () => setPage("ageGate");
 
-      const fallback = setTimeout(() => setPage("ageGate"), 20000);
+      // Splash2 → AgeGate
+      splash2Timer = setTimeout(() => setPage("ageGate"), 15000);
 
       return () => {
         audio.pause();
         clearTimeout(splash1Timer);
-        clearTimeout(fallback);
+        clearTimeout(splash2Timer);
+        clearTimeout(ageGateTimer);
       };
     }
-  }, [ageConfirmed, audioPlayed]);
+  }, [ageConfirmed]);
 
   const handleAgeSubmit = (age) => {
     const legal = age >= LEGAL_AGE;
@@ -100,9 +107,9 @@ export default function App() {
 
   return (
     <Routes>
-      <Route path="/" element={<Main />} />
-      <Route path="/recipe" element={<Recipe />} />
-      <Route path="/admin" element={<Admin />} />
+      <Route path="/" element={<Main isOfLegalAge={isOfLegalAge} authEmail={authEmail} />} />
+      <Route path="/recipe" element={<Recipe isOfLegalAge={isOfLegalAge} />} />
+      <Route path="/admin" element={<Admin authEmail={authEmail} />} />
       <Route path="*" element={<Navigate to="/" />} />
     </Routes>
   );
