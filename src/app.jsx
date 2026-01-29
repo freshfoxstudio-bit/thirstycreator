@@ -1,22 +1,21 @@
 import React, { useState, useEffect } from "react";
-import Main from "./pages/Main"; // Import the main drink generator page
+import { Routes, Route, Navigate } from "react-router-dom";
+import Main from "./pages/Main";
+import Recipe from "./pages/Recipe";
+import Admin from "./pages/Admin";
 
-// Constants
 const SPLASH_1_IMAGE = "/freshfox-logo.png";
 const SPLASH_2_IMAGE = "/drinks.png";
 const JINGLE_AUDIO = "/jinglemix.mp3";
-const LEGAL_AGE = 21; // Adjust for your region
+const LEGAL_AGE = 21; // Adjust to your region
 const ADMIN_EMAIL = "hcandlish2014@gmail.com";
 
 export default function App() {
-  const [page, setPage] = useState("splash1"); // splash1 → splash2 → ageGate → auth → main
-  const [ageConfirmed, setAgeConfirmed] = useState(
-    sessionStorage.getItem("ageConfirmed") === "true"
-  );
-  const [isOfLegalAge, setIsOfLegalAge] = useState(
-    sessionStorage.getItem("isOfLegalAge") === "true"
-  );
+  const [page, setPage] = useState("splash1");
+  const [ageConfirmed, setAgeConfirmed] = useState(sessionStorage.getItem("ageConfirmed") === "true");
+  const [isOfLegalAge, setIsOfLegalAge] = useState(sessionStorage.getItem("isOfLegalAge") === "true");
   const [audioPlayed, setAudioPlayed] = useState(false);
+  const [authEmail, setAuthEmail] = useState(sessionStorage.getItem("authEmail") || "");
 
   useEffect(() => {
     if (!ageConfirmed && !audioPlayed) {
@@ -24,13 +23,9 @@ export default function App() {
       audio.play();
       setAudioPlayed(true);
 
-      // Splash 1 → Splash 2
       const splash1Timer = setTimeout(() => setPage("splash2"), 5000);
-
-      // Splash 2 → Age Gate when audio ends
       audio.onended = () => setPage("ageGate");
 
-      // Fallback in case audio fails
       const fallback = setTimeout(() => setPage("ageGate"), 20000);
 
       return () => {
@@ -41,7 +36,6 @@ export default function App() {
     }
   }, [ageConfirmed, audioPlayed]);
 
-  // Handle age gate confirmation
   const handleAgeSubmit = (age) => {
     const legal = age >= LEGAL_AGE;
     setIsOfLegalAge(legal);
@@ -51,14 +45,14 @@ export default function App() {
     setPage("auth");
   };
 
-  // Placeholder Sign In / Sign Up
   const handleAuthComplete = (email) => {
     const isAdmin = email === ADMIN_EMAIL;
     sessionStorage.setItem("isAdmin", isAdmin ? "true" : "false");
+    sessionStorage.setItem("authEmail", email);
+    setAuthEmail(email);
     setPage("main");
   };
 
-  // Render pages
   if (page === "splash1") {
     return (
       <div style={{ textAlign: "center", paddingTop: "50px" }}>
@@ -80,22 +74,12 @@ export default function App() {
       <div style={{ textAlign: "center", paddingTop: "50px" }}>
         <h1>Age Verification</h1>
         <p>Please enter your age:</p>
-        <input
-          type="number"
-          id="ageInput"
-          placeholder="Your age"
-          style={{ fontSize: "16px", padding: "8px", width: "80px" }}
-        />
-        <button
-          style={{ marginLeft: "10px", padding: "8px 16px", fontSize: "16px" }}
-          onClick={() => {
-            const age = parseInt(document.getElementById("ageInput").value, 10);
-            if (!isNaN(age)) handleAgeSubmit(age);
-            else alert("Please enter a valid age");
-          }}
-        >
-          Submit
-        </button>
+        <input type="number" id="ageInput" placeholder="Your age" />
+        <button onClick={() => {
+          const age = parseInt(document.getElementById("ageInput").value, 10);
+          if (!isNaN(age)) handleAgeSubmit(age);
+          else alert("Please enter a valid age");
+        }}>Submit</button>
       </div>
     );
   }
@@ -104,29 +88,22 @@ export default function App() {
     return (
       <div style={{ textAlign: "center", paddingTop: "50px" }}>
         <h1>Sign Up / Sign In</h1>
-        <input
-          type="email"
-          id="emailInput"
-          placeholder="Your email"
-          style={{ fontSize: "16px", padding: "8px", width: "250px" }}
-        />
-        <button
-          style={{ marginLeft: "10px", padding: "8px 16px", fontSize: "16px" }}
-          onClick={() => {
-            const email = document.getElementById("emailInput").value.trim();
-            if (email) handleAuthComplete(email);
-            else alert("Please enter an email");
-          }}
-        >
-          Continue
-        </button>
+        <input type="email" id="emailInput" placeholder="Your email" />
+        <button onClick={() => {
+          const email = document.getElementById("emailInput").value.trim();
+          if (email) handleAuthComplete(email);
+          else alert("Please enter an email");
+        }}>Continue</button>
       </div>
     );
   }
 
-  if (page === "main") {
-    return <Main />;
-  }
-
-  return null;
+  return (
+    <Routes>
+      <Route path="/" element={<Main />} />
+      <Route path="/recipe" element={<Recipe />} />
+      <Route path="/admin" element={<Admin />} />
+      <Route path="*" element={<Navigate to="/" />} />
+    </Routes>
+  );
 }
