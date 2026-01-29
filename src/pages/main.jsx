@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 
 // Example drink database
 const DRINKS = [
@@ -11,8 +12,9 @@ const DRINKS = [
 ];
 
 export default function Main() {
+  const navigate = useNavigate();
   const isOfLegalAge = sessionStorage.getItem("isOfLegalAge") === "true";
-  const isAdmin = sessionStorage.getItem("isAdmin") === "true"; // Admin check
+  const isAdmin = sessionStorage.getItem("isAdmin") === "true";
 
   const [search, setSearch] = useState("");
   const [ingredientInput, setIngredientInput] = useState("");
@@ -62,6 +64,10 @@ export default function Main() {
 
   const removeIngredient = (ing) => {
     setIngredients(ingredients.filter(i => i !== ing));
+  };
+
+  const goToRecipe = (drink) => {
+    navigate("/recipe", { state: { drink } });
   };
 
   return (
@@ -125,22 +131,30 @@ export default function Main() {
         </div>
       )}
 
-      {/* Results */}
+      {/* Filtered Results */}
       <div style={{ marginBottom: "30px" }}>
         <h3>Results</h3>
         {results.length === 0 ? <p>No drinks found</p> :
           results.map(d => (
-            <div key={d.name} style={{ margin: "10px 0", cursor: "pointer" }}>
+            <div
+              key={d.name}
+              style={{ margin: "10px 0", cursor: "pointer", color: "#ff3366" }}
+              onClick={() => goToRecipe(d)}
+            >
               {d.name} {d.alcohol && "(Alcohol)"}
             </div>
           ))}
       </div>
 
-      {/* Random drinks */}
+      {/* Random Drinks */}
       <div>
         <h3>Random Drinks</h3>
         {randomDrinks.map(d => (
-          <div key={d.name} style={{ margin: "10px 0", cursor: "pointer" }}>
+          <div
+            key={d.name}
+            style={{ margin: "10px 0", cursor: "pointer", color: "#ff3366" }}
+            onClick={() => goToRecipe(d)}
+          >
             {d.name} {d.alcohol && "(Alcohol)"}
           </div>
         ))}
