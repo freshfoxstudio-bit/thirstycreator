@@ -8,29 +8,36 @@ import Admin from "./pages/Admin";
 const SPLASH_1_IMAGE = "/freshfox-logo.png";
 const SPLASH_2_IMAGE = "/drinks.png";
 const JINGLE_AUDIO = "/jinglemix.mp3";
-const LEGAL_AGE = 19; // minimum age for alcoholic drinks
+const LEGAL_AGE = 19;
 const ADMIN_EMAIL = "hcandlish2014@gmail.com";
 
 export default function App() {
   const [stage, setStage] = useState("splash1");
-  const [user, setUser] = useState(null); // { name, email, age }
+  const [user, setUser] = useState(
+    JSON.parse(localStorage.getItem("user")) || null
+  );
 
   useEffect(() => {
-    const audio = new Audio(JINGLE_AUDIO);
-    audio.play().catch(() => {});
+    if (!user) {
+      const audio = new Audio(JINGLE_AUDIO);
+      audio.play().catch(() => {});
 
-    const t1 = setTimeout(() => setStage("splash2"), 4000); // splash1 → splash2
-    const t2 = setTimeout(() => setStage("signup"), 12000); // splash2 → signup
+      const t1 = setTimeout(() => setStage("splash2"), 4000);
+      const t2 = setTimeout(() => setStage("signup"), 12000);
 
-    return () => {
-      clearTimeout(t1);
-      clearTimeout(t2);
-      audio.pause();
-    };
-  }, []);
+      return () => {
+        clearTimeout(t1);
+        clearTimeout(t2);
+        audio.pause();
+      };
+    } else {
+      setStage("main");
+    }
+  }, [user]);
 
-  const handleSignUpComplete = (name, email, age) => {
-    setUser({ name, email, age });
+  const handleSignUpComplete = (newUser) => {
+    localStorage.setItem("user", JSON.stringify(newUser));
+    setUser(newUser);
     setStage("main");
   };
 
@@ -54,7 +61,6 @@ export default function App() {
     return <SignUp onComplete={handleSignUpComplete} />;
   }
 
-  // stage === "main" → show router
   return (
     <BrowserRouter>
       <Routes>
