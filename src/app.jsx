@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from "react";
+import Main from "./pages/Main"; // Import the main drink generator page
 
 // Constants
 const SPLASH_1_IMAGE = "/freshfox-logo.png";
 const SPLASH_2_IMAGE = "/drinks.png";
 const JINGLE_AUDIO = "/jinglemix.mp3";
-const LEGAL_AGE = 21; // adjust for your region
+const LEGAL_AGE = 21; // Adjust for your region
 const ADMIN_EMAIL = "hcandlish2014@gmail.com";
 
 export default function App() {
@@ -18,18 +19,18 @@ export default function App() {
   const [audioPlayed, setAudioPlayed] = useState(false);
 
   useEffect(() => {
-    // Only run splash if age not confirmed
     if (!ageConfirmed && !audioPlayed) {
       const audio = new Audio(JINGLE_AUDIO);
       audio.play();
       setAudioPlayed(true);
 
       // Splash 1 → Splash 2
-      const splash1Timer = setTimeout(() => setPage("splash2"), 5000); // first image duration
+      const splash1Timer = setTimeout(() => setPage("splash2"), 5000);
+
       // Splash 2 → Age Gate when audio ends
       audio.onended = () => setPage("ageGate");
 
-      // fallback: in case audio fails, advance after 20s total
+      // Fallback in case audio fails
       const fallback = setTimeout(() => setPage("ageGate"), 20000);
 
       return () => {
@@ -50,15 +51,14 @@ export default function App() {
     setPage("auth");
   };
 
-  // Placeholder Sign In / Sign Up page
+  // Placeholder Sign In / Sign Up
   const handleAuthComplete = (email) => {
-    // Store admin status in session
     const isAdmin = email === ADMIN_EMAIL;
     sessionStorage.setItem("isAdmin", isAdmin ? "true" : "false");
     setPage("main");
   };
 
-  // Render logic
+  // Render pages
   if (page === "splash1") {
     return (
       <div style={{ textAlign: "center", paddingTop: "50px" }}>
@@ -125,25 +125,7 @@ export default function App() {
   }
 
   if (page === "main") {
-    const isAdmin = sessionStorage.getItem("isAdmin") === "true";
-    return (
-      <div style={{ textAlign: "center", padding: "50px" }}>
-        <h1>Thirsty Creator</h1>
-        {isOfLegalAge ? (
-          <p>Showing alcoholic and non-alcoholic drinks</p>
-        ) : (
-          <p>Showing non-alcoholic drinks only</p>
-        )}
-        {isAdmin && (
-          <p>
-            <a href="/admin" style={{ color: "red", fontWeight: "bold" }}>
-              Admin Panel
-            </a>
-          </p>
-        )}
-        <p>Main drink generator goes here...</p>
-      </div>
-    );
+    return <Main />;
   }
 
   return null;
